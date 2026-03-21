@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 8 complete — next is Module 9 (Backend: Video Routes)**
+**Current module: 9 complete — next is Module 10 (Backend: Social Routes)**
 
 ---
 

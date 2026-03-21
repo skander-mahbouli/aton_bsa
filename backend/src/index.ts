@@ -11,6 +11,8 @@ import { restoreDbFromR2, backupDbToR2 } from './db/backup.js';
 import { initDb } from './db/schema.js';
 import { registerJwt } from './auth/middleware.js';
 import { authRoutes } from './routes/auth.js';
+import { storageRoutes } from './routes/storage.js';
+import { videoRoutes } from './routes/videos.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
 
@@ -37,6 +39,8 @@ async function main() {
 
     // Routes
     await app.register(authRoutes);
+    await app.register(storageRoutes);
+    await app.register(videoRoutes);
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);
