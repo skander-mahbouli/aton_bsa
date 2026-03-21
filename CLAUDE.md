@@ -2,6 +2,17 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
+**Current module: 1 complete — next is Module 2 (Contract: ContentRegistry)**
+
+---
+
+## Keyword Commands
+
+- **"Module X"** (e.g. "Module 1"): Implement **only** that module from `IMPLEMENTATION_PLAN.md`. Do not continue to the next module unless explicitly told to.
+- **"Module X continue"**: The previous session ran out of context mid-module. Read `IMPLEMENTATION_PLAN.md` to identify where the module left off, check existing files with Glob to determine what was already created, then resume from the first incomplete step.
+- **"Fix"**: A bug has been found. Read the relevant files, diagnose the root cause, and fix it. Do not implement anything beyond what is needed to fix the bug.
+- **"Revert"**: The current module produced broken or unwanted code. Undo all changes made in the current module by deleting created files and restoring edited files to their prior state.
+
 ---
 
 ## Before Starting Any Module
@@ -36,6 +47,7 @@ This file contains mandatory instructions for every Claude session implementing 
 ### Environment variables
 - Never hardcode secrets or addresses. Always read from `process.env.*`.
 - When a module says to copy a deployed address to `.env`, remind the user to do so and pause if the next step depends on it.
+- The `.env` file must exist (copied from `.env.example`) with `BOT_TOKEN`, `PLATFORM_WALLET_MNEMONIC`, `TON_API_KEY`, and `JWT_SECRET` filled before Modules 2–4 can deploy contracts. If these are missing, stop and tell the user.
 
 ### TON / blockchain specifics
 - All contracts deploy to **testnet** only. Never use mainnet.
@@ -63,8 +75,9 @@ This file contains mandatory instructions for every Claude session implementing 
 1. **Run the Verify step** from the plan exactly as written. Do not skip it.
 2. **Mark all todos as completed** in TodoWrite.
 3. **Summarize** what was created: list each new file and its purpose in one line each.
-4. **State the next module** number and its Goal so the user knows what comes next.
-5. If the next module begins with a manual **STOP** checkpoint, clearly tell the user what they must do before continuing.
+4. **Commit and push**: stage all new and modified files for this module, commit with message `Module X: <short description>`, and push to origin.
+5. **State the next module** number and its Goal so the user knows what comes next.
+6. If the next module begins with a manual **STOP** checkpoint, clearly tell the user what they must do before continuing.
 
 ---
 
