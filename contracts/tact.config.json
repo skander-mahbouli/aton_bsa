@@ -30,6 +30,26 @@
         "external": false
       },
       "mode": "full"
+    },
+    {
+      "name": "JettonMinter",
+      "path": "contracts/JettonMinter.tact",
+      "output": "build\\JettonMinter",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
+    },
+    {
+      "name": "JettonWallet",
+      "path": "contracts/JettonWallet.tact",
+      "output": "build\\JettonWallet",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
     }
   ]
 }
