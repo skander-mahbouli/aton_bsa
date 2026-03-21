@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 1 complete — next is Module 2 (Contract: ContentRegistry)**
+**Current module: 7 complete — next is Module 8 (Backend: Auth)**
 
 ---
 
