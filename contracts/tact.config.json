@@ -20,6 +20,16 @@
         "external": false
       },
       "mode": "full"
+    },
+    {
+      "name": "SubscriptionManager",
+      "path": "contracts/SubscriptionManager.tact",
+      "output": "build\\SubscriptionManager",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
     }
   ]
 }
