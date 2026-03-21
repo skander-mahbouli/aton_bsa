@@ -13,6 +13,7 @@ import { registerJwt } from './auth/middleware.js';
 import { authRoutes } from './routes/auth.js';
 import { storageRoutes } from './routes/storage.js';
 import { videoRoutes } from './routes/videos.js';
+import { socialRoutes } from './routes/social.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
 
@@ -41,6 +42,7 @@ async function main() {
     await app.register(authRoutes);
     await app.register(storageRoutes);
     await app.register(videoRoutes);
+    await app.register(socialRoutes);
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);
