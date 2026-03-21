@@ -50,6 +50,26 @@
         "external": false
       },
       "mode": "full"
+    },
+    {
+      "name": "NftCollection",
+      "path": "contracts/NftCollection.tact",
+      "output": "build\\NftCollection",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
+    },
+    {
+      "name": "NftItem",
+      "path": "contracts/NftItem.tact",
+      "output": "build\\NftItem",
+      "options": {
+        "debug": false,
+        "external": false
+      },
+      "mode": "full"
     }
   ]
 }
