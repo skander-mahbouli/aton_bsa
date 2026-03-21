@@ -1,9 +1,16 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import path from 'path';
 import { restoreDbFromR2, backupDbToR2 } from './db/backup.js';
 import { initDb } from './db/schema.js';
+import { registerJwt } from './auth/middleware.js';
+import { authRoutes } from './routes/auth.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
 
@@ -22,10 +29,14 @@ async function main() {
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     });
 
+    // JWT
+    await registerJwt(app);
+
     // Health check
     app.get('/health', async () => ({ status: 'ok' }));
 
-    // Routes will be registered here in future modules
+    // Routes
+    await app.register(authRoutes);
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);
