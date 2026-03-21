@@ -14,6 +14,8 @@ import { authRoutes } from './routes/auth.js';
 import { storageRoutes } from './routes/storage.js';
 import { videoRoutes } from './routes/videos.js';
 import { socialRoutes } from './routes/social.js';
+import { createPaymentRoutes } from './routes/payments.js';
+import { createBot } from './bot/index.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
 
@@ -35,6 +37,20 @@ async function main() {
     // JWT
     await registerJwt(app);
 
+    // Bot
+    const bot = createBot(process.env.BOT_TOKEN!);
+
+    // Bot webhook route (raw body, no auth)
+    app.post('/bot-webhook', async (request, reply) => {
+        try {
+            await bot.handleUpdate(request.body as Parameters<typeof bot.handleUpdate>[0]);
+            return reply.status(200).send({ ok: true });
+        } catch (err) {
+            console.error('Bot webhook error:', err);
+            return reply.status(200).send({ ok: true });
+        }
+    });
+
     // Health check
     app.get('/health', async () => ({ status: 'ok' }));
 
@@ -43,10 +59,22 @@ async function main() {
     await app.register(storageRoutes);
     await app.register(videoRoutes);
     await app.register(socialRoutes);
+    await app.register(createPaymentRoutes(bot));
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);
     await app.listen({ port, host: '0.0.0.0' });
+
+    // Set bot webhook after server is listening
+    const backendUrl = process.env.BACKEND_URL;
+    if (backendUrl) {
+        try {
+            await bot.api.setWebhook(`${backendUrl}/bot-webhook`);
+            console.log(`Bot webhook set to ${backendUrl}/bot-webhook`);
+        } catch (err) {
+            console.error('Failed to set bot webhook:', err);
+        }
+    }
 
     // Backup DB to R2 every 2 minutes
     setInterval(() => {
