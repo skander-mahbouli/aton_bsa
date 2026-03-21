@@ -75,7 +75,7 @@ This file contains mandatory instructions for every Claude session implementing 
 1. **Run the Verify step** from the plan exactly as written. Do not skip it.
 2. **Mark all todos as completed** in TodoWrite.
 3. **Summarize** what was created: list each new file and its purpose in one line each.
-4. **Commit and push**: stage all new and modified files for this module, commit with message `Module X: <short description>`, and push to origin.
+4. **Commit**: stage all new and modified files for this module and commit with message `Module X: <short description>`. Then tell the user to push — do not run `git push` yourself.
 5. **State the next module** number and its Goal so the user knows what comes next.
 6. If the next module begins with a manual **STOP** checkpoint, clearly tell the user what they must do before continuing.
 

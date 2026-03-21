@@ -3,17 +3,19 @@ import { ContentRegistry } from '../build/ContentRegistry/ContentRegistry_Conten
 import { NetworkProvider } from '@ton/blueprint';
 
 export async function run(provider: NetworkProvider) {
-    const contentRegistry = provider.open(await ContentRegistry.fromInit());
+    const owner = provider.sender().address!;
+
+    const contentRegistry = provider.open(
+        await ContentRegistry.fromInit(owner)
+    );
 
     await contentRegistry.send(
         provider.sender(),
-        {
-            value: toNano('0.05'),
-        },
-        null,
+        { value: toNano('0.05') },
+        { $$type: 'Deploy', queryId: 0n }
     );
 
     await provider.waitForDeploy(contentRegistry.address);
 
-    // run methods on `contentRegistry`
+    console.log('ContentRegistry deployed to:', contentRegistry.address.toString());
 }
