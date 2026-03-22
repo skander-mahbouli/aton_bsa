@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 13 complete — next is Module 14 (Frontend: Scaffold + Telegram Theme + Routing)**
+**Current module: 14 complete — next is Module 15 (Frontend: Auth + API Client)**
 
 ---
 
