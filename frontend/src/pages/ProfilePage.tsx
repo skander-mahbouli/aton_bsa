@@ -298,16 +298,18 @@ export default function ProfilePage() {
                     Videos
                 </button>
                 {isOwnProfile && (
-                    <button onClick={handleLoadLiked}
-                        className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
-                        style={{ color: activeTab === 'liked' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'liked' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
-                        Liked
-                    </button>
-                    <button onClick={handleLoadSaved}
-                        className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
-                        style={{ color: activeTab === 'saved' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'saved' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
-                        Saved
-                    </button>
+                    <>
+                        <button onClick={handleLoadLiked}
+                            className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
+                            style={{ color: activeTab === 'liked' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'liked' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
+                            Liked
+                        </button>
+                        <button onClick={handleLoadSaved}
+                            className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
+                            style={{ color: activeTab === 'saved' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'saved' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
+                            Saved
+                        </button>
+                    </>
                 )}
             </div>
 
