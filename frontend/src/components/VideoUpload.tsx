@@ -39,7 +39,7 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
     setError('');
 
     if (file.size > MAX_SIZE_BYTES) {
-      setError('La vidéo dépasse 50 Mo.');
+      setError('Video exceeds 50 MB.');
       return;
     }
 
@@ -48,7 +48,7 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
     const testEl = document.createElement('video');
     const support = testEl.canPlayType(type);
     if (support === '' && !type.includes('webm') && !type.includes('mp4') && !type.includes('mov') && !type.includes('ogg')) {
-      setError('Format non supporté. Utilise MP4 ou WebM.');
+      setError('Unsupported format. Use MP4 or WebM.');
       return;
     }
 
@@ -61,7 +61,7 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
     const timeout = setTimeout(() => {
       setLoading(false);
       URL.revokeObjectURL(url);
-      setError('Impossible de lire cette vidéo. Essaie un autre fichier MP4.');
+      setError('Unable to read this video. Try another MP4 file.');
     }, 8000);
 
     vid.onloadedmetadata = () => {
@@ -69,7 +69,7 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
       setLoading(false);
       if (vid.duration > MAX_DURATION_S) {
         URL.revokeObjectURL(url);
-        setError(`La vidéo dépasse ${MAX_DURATION_S} secondes.`);
+        setError(`Video exceeds ${MAX_DURATION_S} seconds.`);
         return;
       }
       setPreview({ file, url });
@@ -79,7 +79,7 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
       clearTimeout(timeout);
       setLoading(false);
       URL.revokeObjectURL(url);
-      setError('Format non supporté. Sur Android, utilise un fichier MP4 (H.264).');
+      setError('Unsupported format. On Android, use an MP4 file (H.264).');
     };
 
     vid.src = url;
@@ -114,12 +114,12 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
     <div className="editor-screen">
       <div className="editor-header">
         <button className="editor-back-btn" onClick={preview ? handleBack : onClose}>
-          {preview ? '← Retour' : '✕ Annuler'}
+          {preview ? '← Back' : '✕ Cancel'}
         </button>
-        <span className="editor-title">Nouvelle vidéo</span>
+        <span className="editor-title">New video</span>
         {preview ? (
           <button className="editor-next-btn" onClick={() => onNext(preview.file, preview.url)}>
-            Suivant →
+            Next →
           </button>
         ) : (
           <div style={{ width: 80 }} />
@@ -136,16 +136,16 @@ export function VideoUpload({ onNext, onClose }: VideoUploadProps) {
           {error && <p className="editor-error">{error}</p>}
 
           <div className="video-upload-options">
-            {/* Filmer → getUserMedia, pas d'input file */}
+            {/* Record → getUserMedia, pas d'input file */}
             <button className="video-upload-btn" onClick={() => setShowCamera(true)}>
               <span className="video-upload-btn-icon"><IconCamera /></span>
-              <span className="video-upload-btn-label">Filmer</span>
+              <span className="video-upload-btn-label">Record</span>
             </button>
 
-            {/* Galerie → input file sans capture */}
+            {/* Gallery → input file sans capture */}
             <button className="video-upload-btn" onClick={() => importRef.current?.click()}>
               <span className="video-upload-btn-icon"><IconGallery /></span>
-              <span className="video-upload-btn-label">Galerie</span>
+              <span className="video-upload-btn-label">Gallery</span>
             </button>
           </div>
 

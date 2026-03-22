@@ -6,6 +6,7 @@ export interface Video {
   isPrivate?: boolean;  // community-only video
   tips: number;
   likes: number;
+  isLiked?: boolean;
   description: string;
   // For user-posted videos (not in the hardcoded creators list)
   dynamicCreator?: {

@@ -20,7 +20,7 @@ function formatCount(n: number): string {
 export function CreatorOverlay({ video, onShowComments }: CreatorOverlayProps) {
   const navigate = useNavigate();
   const [likes, setLikes] = useState(video.likes);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(video.isLiked || false);
   const [showTip, setShowTip] = useState(false);
   const [justFollowed, setJustFollowed] = useState(false);
 

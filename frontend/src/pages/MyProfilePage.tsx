@@ -177,7 +177,8 @@ export function MyProfilePage() {
       {/* Video grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, padding: 2 }}>
         {videos.map(v => (
-          <div key={v.id} style={{ aspectRatio: '9/16' }}>
+          <div key={v.id} style={{ aspectRatio: '9/16', cursor: 'pointer' }}
+            onClick={() => navigate(`/?startapp=v_${v.id}`)}>
             <VideoThumb video={mapApiVideo(v)} />
           </div>
         ))}

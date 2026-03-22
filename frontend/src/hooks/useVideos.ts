@@ -11,6 +11,7 @@ export function mapApiVideo(v: ApiVideo): FeedVideo {
     creatorId: `tg_${v.creator_id}`,
     tips: 0,
     likes: v.like_count,
+    isLiked: v.isLiked || false,
     isPrivate: v.visibility === 'subscribers',
     isPremium: v.visibility === 'subscribers' || v.visibility === 'token_gated',
     description: v.caption || '',
