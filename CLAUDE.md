@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 23 complete — next is Module 24 (Frontend: Bottom Nav + Deep Links)**
+**Current module: 24 complete — next is Module 25 (Tier 2: Explore + Dashboard)**
 
 ---
 

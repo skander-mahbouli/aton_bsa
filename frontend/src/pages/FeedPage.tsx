@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import { useUiStore } from '../store/uiStore';
 import VideoSlide from '../components/VideoSlide';
 import CommentSheet from '../components/CommentSheet';
 import TipModal from '../components/TipModal';
@@ -12,6 +14,8 @@ export default function FeedPage() {
     const [tab, setTab] = useState<FeedTab>('foryou');
     const [commentVideoId, setCommentVideoId] = useState<number | null>(null);
     const [tipVideo, setTipVideo] = useState<Video | null>(null);
+    const setShowNav = useUiStore((s) => s.setShowNav);
+    const [searchParams] = useSearchParams();
     const [videos, setVideos] = useState<Video[]>([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -39,6 +43,12 @@ export default function FeedPage() {
         }
     }, [loading]);
 
+    // Hide nav on feed, show on unmount
+    useEffect(() => {
+        setShowNav(false);
+        return () => setShowNav(true);
+    }, [setShowNav]);
+
     // Fetch on mount and tab change
     useEffect(() => {
         setVideos([]);
@@ -50,6 +60,22 @@ export default function FeedPage() {
             containerRef.current.scrollTop = 0;
         }
     }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Deep link: scroll to specific video
+    useEffect(() => {
+        const videoParam = searchParams.get('video');
+        if (videoParam && videos.length > 0) {
+            const idx = videos.findIndex((v) => v.id === parseInt(videoParam));
+            if (idx >= 0) {
+                setActiveIndex(idx);
+                const container = containerRef.current;
+                if (container) {
+                    const slide = container.querySelector(`[data-slide-index="${idx}"]`);
+                    slide?.scrollIntoView({ behavior: 'instant' });
+                }
+            }
+        }
+    }, [videos, searchParams]);
 
     // Infinite scroll via IntersectionObserver on sentinel
     useEffect(() => {
