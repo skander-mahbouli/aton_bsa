@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 17 complete — next is Module 18 (Frontend: Comment Sheet)**
+**Current module: 18 complete — next is Module 19 (Frontend: Tip Modal)**
 
 ---
 
