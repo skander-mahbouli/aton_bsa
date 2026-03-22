@@ -56,12 +56,16 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
                 audio: true,
             });
             streamRef.current = stream;
-            if (previewRef.current) {
-                previewRef.current.srcObject = stream;
-                // Force play on Android
-                previewRef.current.play().catch(() => {});
-            }
             setHasCamera(true);
+            // Wait for video element to render, then attach stream
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (previewRef.current && streamRef.current) {
+                        previewRef.current.srcObject = streamRef.current;
+                        previewRef.current.play().catch(() => {});
+                    }
+                }, 100);
+            });
         } catch {
             setHasCamera(false);
         }
