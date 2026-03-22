@@ -1,6 +1,4 @@
-import { Buffer } from 'buffer';
-(window as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
-
+import './polyfills';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
