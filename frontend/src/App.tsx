@@ -8,6 +8,7 @@ import CreatePage from './pages/CreatePage';
 import ProfilePage from './pages/ProfilePage';
 import ExplorePage from './pages/ExplorePage';
 import InboxPage from './pages/InboxPage';
+import DashboardPage from './pages/DashboardPage';
 import BottomNav from './components/BottomNav';
 
 function DeepLinkHandler() {
@@ -59,6 +60,7 @@ export default function App() {
                             <Route path="/profile/:userId?" element={<ProfilePage />} />
                             <Route path="/explore" element={<ExplorePage />} />
                             <Route path="/inbox" element={<InboxPage />} />
+                            <Route path="/dashboard" element={<DashboardPage />} />
                         </Routes>
                     </main>
                     {showNav && <BottomNav />}

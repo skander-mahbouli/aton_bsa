@@ -19,6 +19,7 @@ import { tonRoutes } from './routes/ton.js';
 import { userRoutes } from './routes/users.js';
 import { notificationRoutes } from './routes/notifications.js';
 import { searchRoutes } from './routes/search.js';
+import { dashboardRoutes } from './routes/dashboard.js';
 import { createBot } from './bot/index.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
@@ -68,6 +69,7 @@ async function main() {
     await app.register(userRoutes);
     await app.register(notificationRoutes);
     await app.register(searchRoutes);
+    await app.register(dashboardRoutes);
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);

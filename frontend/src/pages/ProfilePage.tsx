@@ -197,6 +197,13 @@ export default function ProfilePage() {
                                 Edit Profile
                             </button>
                         )}
+                        {profile.is_creator === 1 && (
+                            <button onClick={() => navigate('/dashboard')}
+                                className="px-6 py-2 rounded-lg text-sm font-medium"
+                                style={{ backgroundColor: 'var(--tg-secondary-bg)', color: 'var(--tg-text)' }}>
+                                Dashboard
+                            </button>
+                        )}
                         {!profile.is_creator && (
                             <button onClick={handleBecomeCreator}
                                 className="px-6 py-2 rounded-lg text-sm font-medium"
