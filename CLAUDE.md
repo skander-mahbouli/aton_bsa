@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 14 complete — next is Module 15 (Frontend: Auth + API Client)**
+**Current module: 15 complete — next is Module 16 (Frontend: Feed Page)**
 
 ---
 
