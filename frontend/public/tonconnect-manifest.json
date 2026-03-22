@@ -1,7 +1,7 @@
 {
-    "url": "https://tikton.app",
+    "url": "https://tikton.vercel.app",
     "name": "TikTon",
-    "iconUrl": "https://tikton.app/icon.png",
+    "iconUrl": "https://tikton.vercel.app/icon.png",
     "termsOfUseUrl": "",
     "privacyPolicyUrl": ""
 }
