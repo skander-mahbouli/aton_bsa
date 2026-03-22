@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PublishForm from '../components/PublishForm';
 
 type Screen = 'camera' | 'publish';
@@ -39,24 +40,26 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
     const [recordTime, setRecordTime] = useState(0);
     const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
     const [reviewBlob, setReviewBlob] = useState<Blob | null>(null);
+    const [processing, setProcessing] = useState(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
+    const navigate = useNavigate();
 
     const startStream = useCallback(async (facing: 'user' | 'environment') => {
-        // Stop existing stream
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((t) => t.stop());
         }
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: facing },
+                video: { facingMode: facing, width: { ideal: 1080 }, height: { ideal: 1920 } },
                 audio: true,
             });
             streamRef.current = stream;
             if (previewRef.current) {
                 previewRef.current.srcObject = stream;
+                // Force play on Android
+                previewRef.current.play().catch(() => {});
             }
             setHasCamera(true);
         } catch {
@@ -84,19 +87,24 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
         if (!streamRef.current) return;
         chunksRef.current = [];
 
-        const recorder = new MediaRecorder(streamRef.current);
+        // Try different MIME types for compatibility
+        let mimeType = 'video/webm';
+        if (MediaRecorder.isTypeSupported('video/mp4')) mimeType = 'video/mp4';
+        else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) mimeType = 'video/webm;codecs=vp8';
+
+        const recorder = new MediaRecorder(streamRef.current, { mimeType });
         recorder.ondataavailable = (e) => {
             if (e.data.size > 0) chunksRef.current.push(e.data);
         };
         recorder.onstop = () => {
-            const blob = new Blob(chunksRef.current, { type: 'video/mp4' });
+            const blob = new Blob(chunksRef.current, { type: mimeType });
             setReviewBlob(blob);
             setRecording(false);
             setRecordTime(0);
             if (timerRef.current) clearInterval(timerRef.current);
         };
 
-        recorder.start();
+        recorder.start(1000); // collect chunks every second
         recorderRef.current = recorder;
         setRecording(true);
         setRecordTime(0);
@@ -116,92 +124,102 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
         recorderRef.current?.stop();
     };
 
-    const handleFileInput = async (file: File) => {
+    const handleFileInput = (file: File) => {
         if (file.size > 100 * 1024 * 1024) {
             alert('File too large (max 100MB)');
             return;
         }
-
-        // Check duration
-        const url = URL.createObjectURL(file);
-        const video = document.createElement('video');
-        video.preload = 'metadata';
-        video.src = url;
-
-        await new Promise<void>((resolve) => {
-            video.onloadedmetadata = () => resolve();
-        });
-
-        if (video.duration > 180) {
-            alert('Video too long (max 3 minutes)');
-            URL.revokeObjectURL(url);
-            return;
-        }
-
         setReviewBlob(file);
-        URL.revokeObjectURL(url);
-    };
-
-    const captureFirstFrame = async (videoEl: HTMLVideoElement): Promise<Blob> => {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
-        canvas.getContext('2d')!.drawImage(videoEl, 0, 0);
-        return new Promise((resolve) =>
-            canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.8),
-        );
     };
 
     const handleUseVideo = async () => {
-        if (!reviewBlob) return;
+        if (!reviewBlob || processing) return;
+        setProcessing(true);
 
-        // Capture thumbnail
-        const url = URL.createObjectURL(reviewBlob);
-        const video = document.createElement('video');
-        video.preload = 'auto';
-        video.muted = true;
-        video.playsInline = true;
-        video.src = url;
+        try {
+            // Create a simple 1x1 black thumbnail as fallback
+            let thumb: Blob;
 
-        await new Promise<void>((resolve) => {
-            video.onloadeddata = () => resolve();
-        });
-        video.currentTime = 0.1;
-        await new Promise<void>((resolve) => {
-            video.onseeked = () => resolve();
-        });
+            try {
+                // Try to capture first frame
+                const url = URL.createObjectURL(reviewBlob);
+                const video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.playsInline = true;
+                video.src = url;
 
-        const thumb = await captureFirstFrame(video);
-        URL.revokeObjectURL(url);
+                await Promise.race([
+                    new Promise<void>((resolve) => { video.onloadeddata = () => resolve(); }),
+                    new Promise<void>((_, reject) => setTimeout(() => reject('timeout'), 3000)),
+                ]);
 
-        onVideoReady(reviewBlob, thumb);
+                video.currentTime = 0.1;
+                await Promise.race([
+                    new Promise<void>((resolve) => { video.onseeked = () => resolve(); }),
+                    new Promise<void>((_, reject) => setTimeout(() => reject('timeout'), 3000)),
+                ]);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 360;
+                canvas.height = video.videoHeight || 640;
+                canvas.getContext('2d')!.drawImage(video, 0, 0);
+                thumb = await new Promise<Blob>((resolve) =>
+                    canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.8),
+                );
+                URL.revokeObjectURL(url);
+            } catch {
+                // Fallback: create a simple black thumbnail
+                const canvas = document.createElement('canvas');
+                canvas.width = 360;
+                canvas.height = 640;
+                const ctx = canvas.getContext('2d')!;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, 360, 640);
+                ctx.fillStyle = '#fff';
+                ctx.font = '24px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Video', 180, 320);
+                thumb = await new Promise<Blob>((resolve) =>
+                    canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.8),
+                );
+            }
+
+            onVideoReady(reviewBlob, thumb);
+        } catch {
+            alert('Failed to process video. Try uploading from gallery instead.');
+        } finally {
+            setProcessing(false);
+        }
     };
 
     // Review screen
     if (reviewBlob) {
         const previewUrl = URL.createObjectURL(reviewBlob);
         return (
-            <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--tg-bg)' }}>
+            <div className="h-full flex flex-col" style={{ backgroundColor: '#000' }}>
                 <video
                     src={previewUrl}
-                    className="flex-1 object-cover"
+                    className="flex-1 w-full object-cover"
                     autoPlay
                     loop
                     playsInline
                     muted
+                    style={{ maxHeight: 'calc(100% - 70px)' }}
                 />
-                <div className="flex gap-4 p-4 justify-center">
+                <div className="flex gap-4 p-4 justify-center" style={{ backgroundColor: '#000' }}>
                     <button
                         onClick={() => { setReviewBlob(null); URL.revokeObjectURL(previewUrl); }}
-                        className="px-6 py-3 rounded-full text-sm font-medium"
-                        style={{ backgroundColor: 'var(--tg-secondary-bg)', color: 'var(--tg-text)' }}>
+                        className="px-8 py-3 rounded-full text-sm font-medium border-none cursor-pointer"
+                        style={{ backgroundColor: '#2c2c2e', color: '#fff' }}>
                         Retake
                     </button>
                     <button
                         onClick={handleUseVideo}
-                        className="px-6 py-3 rounded-full text-sm font-medium"
-                        style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
-                        Use this
+                        disabled={processing}
+                        className="px-8 py-3 rounded-full text-sm font-semibold border-none cursor-pointer disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg, #25f4ee, #fe2c55)', color: '#fff' }}>
+                        {processing ? 'Processing...' : 'Next'}
                     </button>
                 </div>
             </div>
@@ -212,50 +230,49 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
 
     return (
         <div className="h-full flex flex-col relative" style={{ backgroundColor: '#000' }}>
+            {/* Back button */}
+            <button onClick={() => navigate('/')}
+                className="absolute top-3 left-3 z-20 bg-black/40 rounded-full p-2 border-none cursor-pointer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+
             {/* Camera preview */}
             {hasCamera && (
                 <video
                     ref={previewRef}
-                    className="flex-1 object-cover"
+                    className="flex-1 w-full object-cover"
                     autoPlay
                     playsInline
                     muted
+                    style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
                 />
             )}
 
             {!hasCamera && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                    <p className="text-white text-sm">Camera not available</p>
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="px-6 py-3 rounded-full text-sm font-medium"
-                        style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
-                        Record Video
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="video/*"
-                        capture="environment"
-                        className="hidden"
-                        onChange={(e) => e.target.files?.[0] && handleFileInput(e.target.files[0])}
-                    />
+                <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <p className="text-white/40 text-sm">Camera not available</p>
                 </div>
             )}
 
             {/* Timer */}
             {recording && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-red-600 text-white text-sm px-3 py-1 rounded-full flex items-center gap-2">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-red-600 text-white text-sm px-4 py-1.5 rounded-full flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                     {formatTime(recordTime)}
                 </div>
             )}
 
-            {/* Flip camera button */}
+            {/* Flip camera */}
             {hasCamera && !recording && (
                 <button onClick={flipCamera}
-                    className="absolute top-4 right-4 z-10 bg-black/40 rounded-full p-2">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                    className="absolute top-3 right-3 z-20 bg-black/40 rounded-full p-2 border-none cursor-pointer">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
                         <path d="M20 16v4H4v-4" />
                         <path d="M4 8V4h16v4" />
                         <polyline points="7 20 4 16 7 12" />
@@ -265,15 +282,16 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
             )}
 
             {/* Bottom controls */}
-            <div className="absolute bottom-20 left-0 right-0 flex items-center justify-center gap-8 z-10">
+            <div className="p-6 flex items-center justify-center gap-8" style={{ backgroundColor: '#000' }}>
                 {/* Gallery */}
                 <button onClick={() => galleryInputRef.current?.click()}
-                    className="bg-black/40 rounded-full p-3">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    className="bg-transparent border-none cursor-pointer p-2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
                     </svg>
+                    <p className="text-white/50 text-[10px] mt-1">Gallery</p>
                 </button>
                 <input
                     ref={galleryInputRef}
@@ -284,23 +302,21 @@ function CameraScreen({ onVideoReady }: { onVideoReady: (video: Blob, thumb: Blo
                 />
 
                 {/* Record button */}
-                {hasCamera && (
-                    <button
-                        onClick={recording ? stopRecording : startRecording}
-                        className="relative w-16 h-16 rounded-full border-4 border-white flex items-center justify-center">
-                        {recording ? (
-                            <div className="w-6 h-6 rounded bg-red-600" />
-                        ) : (
-                            <div className="w-12 h-12 rounded-full bg-red-600" />
-                        )}
-                        {recording && (
-                            <div className="absolute inset-[-6px] rounded-full border-4 border-red-600 animate-pulse" />
-                        )}
-                    </button>
-                )}
+                <button
+                    onClick={recording ? stopRecording : (hasCamera ? startRecording : () => galleryInputRef.current?.click())}
+                    className="relative w-16 h-16 rounded-full border-4 border-white flex items-center justify-center bg-transparent cursor-pointer">
+                    {recording ? (
+                        <div className="w-6 h-6 rounded-sm bg-red-500" />
+                    ) : (
+                        <div className="w-12 h-12 rounded-full bg-[#fe2c55]" />
+                    )}
+                    {recording && (
+                        <div className="absolute inset-[-6px] rounded-full border-4 border-red-500 animate-pulse" />
+                    )}
+                </button>
 
                 {/* Placeholder for symmetry */}
-                <div className="w-12 h-12" />
+                <div className="w-12" />
             </div>
         </div>
     );
