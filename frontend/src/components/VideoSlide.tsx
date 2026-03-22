@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useUiStore } from '../store/uiStore';
 import api from '../lib/api';
+import PaidContentOverlay from './PaidContentOverlay';
+import TokenGatedOverlay from './TokenGatedOverlay';
 import type { Video } from '../types';
 
 interface Props {
@@ -18,6 +20,10 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
     const [paused, setPaused] = useState(false);
     const [showPause, setShowPause] = useState(false);
     const [showHeart, setShowHeart] = useState(false);
+    const [unlocked, setUnlocked] = useState(video.isUnlocked || false);
+
+    const isPaid = video.visibility === 'paid' && video.star_price && !unlocked;
+    const isTokenGated = video.visibility === 'token_gated' && video.required_token && !unlocked;
     const [heartPos, setHeartPos] = useState({ x: 0, y: 0 });
     const lastTapRef = useRef(0);
     const viewTrackedRef = useRef(false);
@@ -106,8 +112,12 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
                 poster={video.thumbnail_url || undefined}
             />
 
+            {/* Paid / Token-gated overlays */}
+            {isPaid && <PaidContentOverlay video={video} onUnlocked={() => setUnlocked(true)} />}
+            {isTokenGated && <TokenGatedOverlay video={video} />}
+
             {/* Tap area */}
-            <div className="absolute inset-0 z-10" onClick={handleTap} />
+            {!isPaid && !isTokenGated && <div className="absolute inset-0 z-10" onClick={handleTap} />}
 
             {/* Pause icon */}
             {showPause && (
