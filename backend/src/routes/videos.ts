@@ -134,13 +134,15 @@ export async function videoRoutes(app: FastifyInstance) {
 
         const videos = db.prepare(sql).all(...params) as Record<string, unknown>[];
 
-        // Attach isLiked and isUnlocked for authenticated users
+        // Attach isLiked, isUnlocked, isBookmarked for authenticated users
         if (userId) {
             const likeStmt = db.prepare('SELECT 1 FROM likes WHERE user_id = ? AND video_id = ?');
             const unlockStmt = db.prepare('SELECT 1 FROM video_unlocks WHERE user_id = ? AND video_id = ?');
+            const bookmarkStmt = db.prepare('SELECT 1 FROM bookmarks WHERE user_id = ? AND video_id = ?');
             for (const video of videos) {
                 video.isLiked = !!likeStmt.get(userId, video.id);
                 video.isUnlocked = !!unlockStmt.get(userId, video.id);
+                video.isBookmarked = !!bookmarkStmt.get(userId, video.id);
             }
         }
 
@@ -168,6 +170,7 @@ export async function videoRoutes(app: FastifyInstance) {
         if (userId) {
             video.isLiked = !!db.prepare('SELECT 1 FROM likes WHERE user_id = ? AND video_id = ?').get(userId, videoId);
             video.isUnlocked = !!db.prepare('SELECT 1 FROM video_unlocks WHERE user_id = ? AND video_id = ?').get(userId, videoId);
+            video.isBookmarked = !!db.prepare('SELECT 1 FROM bookmarks WHERE user_id = ? AND video_id = ?').get(userId, videoId);
         }
 
         return video;

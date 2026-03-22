@@ -41,6 +41,7 @@ export interface Video {
     creator_wallet?: string;
     isLiked?: boolean;
     isUnlocked?: boolean;
+    isBookmarked?: boolean;
 }
 
 export interface Comment {

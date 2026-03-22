@@ -21,7 +21,7 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
     const [showPause, setShowPause] = useState(false);
     const [showHeart, setShowHeart] = useState(false);
     const [unlocked, setUnlocked] = useState(video.isUnlocked || false);
-    const [bookmarked, setBookmarked] = useState(false);
+    const [bookmarked, setBookmarked] = useState(video.isBookmarked || false);
 
     const isPaid = video.visibility === 'paid' && video.star_price && !unlocked;
     const isTokenGated = video.visibility === 'token_gated' && video.required_token && !unlocked;

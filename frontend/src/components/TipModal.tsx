@@ -80,8 +80,8 @@ export default function TipModal({ video, onClose }: Props) {
             />
 
             <motion.div
-                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl safe-bottom"
-                style={{ backgroundColor: '#1c1c1e', maxHeight: '70vh' }}
+                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl safe-bottom overflow-y-auto"
+                style={{ backgroundColor: '#1c1c1e', maxHeight: '50vh' }}
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
@@ -114,7 +114,7 @@ export default function TipModal({ video, onClose }: Props) {
 
                         {/* Stars tab */}
                         {tab === 'stars' && (
-                            <div className="px-4 pb-6">
+                            <div className="px-4 pb-4">
                                 <p className="text-white/40 text-xs mb-4">Send Stars to {video.creator_name}</p>
                                 <div className="grid grid-cols-5 gap-2 mb-4">
                                     {STAR_PRESETS.map((amount) => (
@@ -143,7 +143,7 @@ export default function TipModal({ video, onClose }: Props) {
 
                         {/* TON tab */}
                         {tab === 'ton' && (
-                            <div className="px-4 pb-6">
+                            <div className="px-4 pb-4">
                                 {!wallet ? (
                                     <div className="flex flex-col items-center gap-4 py-6">
                                         <p className="text-white/40 text-sm">Connect wallet to tip with TON</p>
