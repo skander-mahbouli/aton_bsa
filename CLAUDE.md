@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 25 complete — next is Module 26 (Tier 2: NFTs + Notifications + Bookmarks)**
+**Current module: 26 complete — next is Module 27 (Deployment)**
 
 ---
 

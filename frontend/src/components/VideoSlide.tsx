@@ -21,6 +21,7 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
     const [showPause, setShowPause] = useState(false);
     const [showHeart, setShowHeart] = useState(false);
     const [unlocked, setUnlocked] = useState(video.isUnlocked || false);
+    const [bookmarked, setBookmarked] = useState(false);
 
     const isPaid = video.visibility === 'paid' && video.star_price && !unlocked;
     const isTokenGated = video.visibility === 'token_gated' && video.required_token && !unlocked;
@@ -186,6 +187,21 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                     </svg>
                     <span className="text-white text-xs drop-shadow">Tip</span>
+                </button>
+
+                {/* Bookmark */}
+                <button onClick={(e) => {
+                    e.stopPropagation();
+                    api.post(`/api/videos/${video.id}/bookmark`).then((res) => {
+                        setBookmarked((res.data as { bookmarked: boolean }).bookmarked);
+                    }).catch(() => {});
+                }} className="flex flex-col items-center gap-1 bg-transparent border-none">
+                    <svg width="28" height="28" viewBox="0 0 24 24"
+                        fill={bookmarked ? 'white' : 'none'}
+                        stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                    </svg>
+                    <span className="text-white text-xs drop-shadow">Save</span>
                 </button>
             </div>
 

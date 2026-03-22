@@ -6,6 +6,7 @@ import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import WalletSection from '../components/WalletSection';
 import LaunchTokenModal from '../components/LaunchTokenModal';
+import NftDeployModal from '../components/NftDeployModal';
 import type { User, Video } from '../types';
 
 interface ProfileData extends User {
@@ -28,7 +29,7 @@ export default function ProfilePage() {
     const currentUser = useAuthStore((s) => s.user);
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [videos, setVideos] = useState<Video[]>([]);
-    const [activeTab, setActiveTab] = useState<'videos' | 'liked'>('videos');
+    const [activeTab, setActiveTab] = useState<'videos' | 'liked' | 'saved'>('videos');
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
     const [bio, setBio] = useState('');
@@ -36,6 +37,7 @@ export default function ProfilePage() {
     const [tonConnectUI] = useTonConnectUI();
 
     const [showLaunchToken, setShowLaunchToken] = useState(false);
+    const [showNftDeploy, setShowNftDeploy] = useState(false);
     const isOwnProfile = !userId || (currentUser && parseInt(userId) === currentUser.id);
     const profileId = isOwnProfile ? currentUser?.id : parseInt(userId || '0');
 
@@ -110,6 +112,14 @@ export default function ProfilePage() {
         setActiveTab('liked');
         try {
             const res = await api.get<{ videos: Video[] }>('/api/users/me/liked');
+            setVideos(res.data.videos);
+        } catch { /* ignore */ }
+    };
+
+    const handleLoadSaved = async () => {
+        setActiveTab('saved');
+        try {
+            const res = await api.get<{ videos: Video[] }>('/api/users/me/bookmarks');
             setVideos(res.data.videos);
         } catch { /* ignore */ }
     };
@@ -269,6 +279,17 @@ export default function ProfilePage() {
                 </div>
             )}
 
+            {/* NFT section (own creator profile) */}
+            {isOwnProfile && profile.is_creator === 1 && (
+                <div className="mt-4 px-4">
+                    <button onClick={() => setShowNftDeploy(true)}
+                        className="w-full py-2 rounded-lg text-sm font-medium"
+                        style={{ backgroundColor: 'var(--tg-secondary-bg)', color: 'var(--tg-text)' }}>
+                        Deploy NFT Collection
+                    </button>
+                </div>
+            )}
+
             {/* Tabs */}
             <div className="flex justify-center gap-8 mt-4 border-b" style={{ borderColor: 'var(--tg-secondary-bg)' }}>
                 <button onClick={handleLoadVideos}
@@ -281,6 +302,11 @@ export default function ProfilePage() {
                         className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
                         style={{ color: activeTab === 'liked' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'liked' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
                         Liked
+                    </button>
+                    <button onClick={handleLoadSaved}
+                        className="pb-2 text-sm font-medium bg-transparent border-none cursor-pointer"
+                        style={{ color: activeTab === 'saved' ? 'var(--tg-text)' : 'var(--tg-hint)', borderBottom: activeTab === 'saved' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
+                        Saved
                     </button>
                 )}
             </div>
@@ -351,6 +377,10 @@ export default function ProfilePage() {
                         setShowLaunchToken(false);
                     }}
                 />
+            )}
+
+            {showNftDeploy && (
+                <NftDeployModal onClose={() => setShowNftDeploy(false)} />
             )}
         </div>
     );
