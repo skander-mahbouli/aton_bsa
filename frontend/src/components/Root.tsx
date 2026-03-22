@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TonConnectUIProvider } from '@tonconnect/ui-react';
+import { TonConnectUIProvider, useTonConnectUI } from '@tonconnect/ui-react';
 
 import { App } from '@/components/App';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -34,6 +34,15 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Expose TonConnectUI to window so non-component code can use it
+function TonConnectExposer() {
+  const [tc] = useTonConnectUI();
+  useEffect(() => {
+    (window as any).__tonConnectUI = tc;
+  }, [tc]);
+  return null;
+}
+
 export function Root() {
   return (
     <ErrorBoundary fallback={ErrorBoundaryError}>
@@ -41,6 +50,7 @@ export function Root() {
         manifestUrl={publicUrl('tonconnect-manifest.json')}
         actionsConfiguration={{ twaReturnUrl: `https://t.me/${import.meta.env.VITE_BOT_USERNAME || 'tikton_bot'}/app` }}
       >
+        <TonConnectExposer />
         <AuthGate>
           <App />
         </AuthGate>
