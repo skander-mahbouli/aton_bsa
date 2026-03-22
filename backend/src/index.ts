@@ -46,6 +46,7 @@ async function main() {
 
     // Bot
     const bot = createBot(process.env.BOT_TOKEN!);
+    await bot.init();
 
     // Bot webhook route (raw body, no auth)
     app.post('/bot-webhook', async (request, reply) => {
