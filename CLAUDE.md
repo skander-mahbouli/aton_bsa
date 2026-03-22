@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 15 complete — next is Module 16 (Frontend: Feed Page)**
+**Current module: 16 complete — next is Module 17 (Frontend: Video Overlays)**
 
 ---
 
