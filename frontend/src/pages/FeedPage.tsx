@@ -3,6 +3,7 @@ import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
 import VideoSlide from '../components/VideoSlide';
 import CommentSheet from '../components/CommentSheet';
+import TipModal from '../components/TipModal';
 import type { Video } from '../types';
 
 type FeedTab = 'following' | 'foryou' | 'trending';
@@ -10,6 +11,7 @@ type FeedTab = 'following' | 'foryou' | 'trending';
 export default function FeedPage() {
     const [tab, setTab] = useState<FeedTab>('foryou');
     const [commentVideoId, setCommentVideoId] = useState<number | null>(null);
+    const [tipVideo, setTipVideo] = useState<Video | null>(null);
     const [videos, setVideos] = useState<Video[]>([]);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(true);
@@ -151,7 +153,7 @@ export default function FeedPage() {
                             onLike={() => handleLike(video, index)}
                             onComment={() => setCommentVideoId(video.id)}
                             onShare={() => handleShare(video)}
-                            onTip={() => {/* Module 19 */}}
+                            onTip={() => setTipVideo(video)}
                         />
                     </div>
                 ))}
@@ -163,6 +165,11 @@ export default function FeedPage() {
             {/* Comment sheet */}
             {commentVideoId !== null && (
                 <CommentSheet videoId={commentVideoId} onClose={() => setCommentVideoId(null)} />
+            )}
+
+            {/* Tip modal */}
+            {tipVideo !== null && (
+                <TipModal video={tipVideo} onClose={() => setTipVideo(null)} />
             )}
         </div>
     );
