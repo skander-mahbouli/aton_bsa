@@ -117,5 +117,4 @@ Do not proceed past these points without user confirmation:
 
 ## Known Deviations from Plan
 
-- **Platform wallet (Module 7)**: `ton/client.ts` uses `WalletContractV4` but the user's actual wallet is W5 (v5R1). Must be updated before backend sends on-chain transactions (content registration). Contracts were deployed with W5 — the backend wallet derivation needs to match.
 - **ContentRegistry keys (Module 2)**: Plan says `map<String, Address>` but Tact only supports integer keys. Uses `map<Int, Address>` with `sha256(contentHash)` — functionally equivalent.

@@ -4,6 +4,11 @@ import { getDb } from '../db/schema.js';
 import { registerContentOnChain } from '../ton/register.js';
 
 function buildPublicUrl(key: string): string {
+    const publicUrl = process.env.R2_PUBLIC_URL;
+    if (publicUrl) {
+        return `${publicUrl}/${key}`;
+    }
+    // Fallback to S3 endpoint (won't work for public access)
     const endpoint = process.env.S3_ENDPOINT || '';
     const bucket = process.env.S3_BUCKET || '';
     return `${endpoint}/${bucket}/${key}`;

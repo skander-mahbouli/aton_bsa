@@ -1,6 +1,5 @@
-import { TonClient } from '@ton/ton';
+import { TonClient, WalletContractV5R1 } from '@ton/ton';
 import { mnemonicToPrivateKey, KeyPair } from '@ton/crypto';
-import { WalletContractV4 } from '@ton/ton';
 
 let tonClient: TonClient | null = null;
 
@@ -20,7 +19,7 @@ export function getTonClient(): TonClient {
 }
 
 export async function getPlatformWallet(): Promise<{
-    wallet: WalletContractV4;
+    wallet: WalletContractV5R1;
     keyPair: KeyPair;
     contract: ReturnType<TonClient['open']>;
 }> {
@@ -30,7 +29,7 @@ export async function getPlatformWallet(): Promise<{
     }
 
     const keyPair = await mnemonicToPrivateKey(mnemonic.split(' '));
-    const wallet = WalletContractV4.create({
+    const wallet = WalletContractV5R1.create({
         publicKey: keyPair.publicKey,
         workchain: 0,
     });
