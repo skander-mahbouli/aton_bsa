@@ -101,7 +101,7 @@ export default function VideoSlide({ video, isActive, onLike, onComment, onShare
     }, [soundEnabled, setSoundEnabled, onLike]);
 
     return (
-        <div className="relative h-screen w-full snap-start snap-always flex-shrink-0" style={{ scrollSnapAlign: 'start' }}>
+        <div className="relative h-screen w-full snap-start snap-always flex-shrink-0" style={{ scrollSnapAlign: 'start', backgroundColor: '#000' }}>
             <video
                 ref={videoRef}
                 src={video.video_url}

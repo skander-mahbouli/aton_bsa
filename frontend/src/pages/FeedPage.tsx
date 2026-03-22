@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
-import { useUiStore } from '../store/uiStore';
+// import { useUiStore } from '../store/uiStore';
 import VideoSlide from '../components/VideoSlide';
 import CommentSheet from '../components/CommentSheet';
 import TipModal from '../components/TipModal';
@@ -14,7 +14,6 @@ export default function FeedPage() {
     const [tab, setTab] = useState<FeedTab>('foryou');
     const [commentVideoId, setCommentVideoId] = useState<number | null>(null);
     const [tipVideo, setTipVideo] = useState<Video | null>(null);
-    const setShowNav = useUiStore((s) => s.setShowNav);
     const [searchParams] = useSearchParams();
     const [videos, setVideos] = useState<Video[]>([]);
     const [page, setPage] = useState(0);
@@ -42,12 +41,6 @@ export default function FeedPage() {
             setLoading(false);
         }
     }, [loading]);
-
-    // Hide nav on feed, show on unmount
-    useEffect(() => {
-        setShowNav(false);
-        return () => setShowNav(true);
-    }, [setShowNav]);
 
     // Fetch on mount and tab change
     useEffect(() => {
