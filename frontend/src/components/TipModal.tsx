@@ -43,12 +43,10 @@ export default function TipModal({ video, onClose }: Props) {
 
     const handleTonTip = async (amount: string) => {
         if (!wallet || !video.creator_wallet) return;
-
         const tipJarAddress = import.meta.env.VITE_TIP_JAR_ADDRESS;
         if (!tipJarAddress) return;
 
         try {
-            // Build TipCreator message: opcode 0x156419be + creatorAddress + videoId
             const body = beginCell()
                 .storeUint(0x156419be, 32)
                 .storeAddress(Address.parse(video.creator_wallet))
@@ -67,156 +65,124 @@ export default function TipModal({ video, onClose }: Props) {
             setSuccess(`+${amount} TON`);
             setTimeout(() => { setSuccess(''); onClose(); }, 1500);
         } catch {
-            // user rejected or error
+            // user rejected
         }
     };
 
     return (
         <AnimatePresence>
-            {/* Backdrop */}
             <motion.div
-                className="fixed inset-0 bg-black/50 z-40"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 z-40"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
             />
 
-            {/* Sheet */}
             <motion.div
-                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl"
-                style={{ backgroundColor: 'var(--tg-bg)' }}
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
+                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl safe-bottom"
+                style={{ backgroundColor: '#1c1c1e', maxHeight: '70vh' }}
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
-                {/* Drag handle */}
-                <div className="flex justify-center pt-3 pb-2">
-                    <div className="w-10 h-1 rounded-full" style={{ backgroundColor: 'var(--tg-hint)' }} />
+                <div className="flex justify-center pt-3 pb-1">
+                    <div className="w-9 h-1 rounded-full bg-white/20" />
                 </div>
 
-                {/* Success animation */}
                 {success && (
-                    <motion.div
-                        className="absolute inset-0 flex items-center justify-center z-60 pointer-events-none"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: -30 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <span className="text-2xl font-bold" style={{ color: 'var(--tg-button)' }}>
-                            {success}
-                        </span>
+                    <motion.div className="flex items-center justify-center py-8"
+                        initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                        <span className="text-3xl font-bold" style={{ color: '#25f4ee' }}>{success}</span>
                     </motion.div>
                 )}
 
-                {/* Tabs */}
-                <div className="flex justify-center gap-6 px-4 pb-3">
-                    <button
-                        onClick={() => setTab('stars')}
-                        className={`text-sm font-semibold bg-transparent border-none cursor-pointer pb-1 ${tab === 'stars' ? '' : 'opacity-50'}`}
-                        style={{ color: 'var(--tg-text)', borderBottom: tab === 'stars' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
-                        Stars
-                    </button>
-                    <button
-                        onClick={() => setTab('ton')}
-                        className={`text-sm font-semibold bg-transparent border-none cursor-pointer pb-1 ${tab === 'ton' ? '' : 'opacity-50'}`}
-                        style={{ color: 'var(--tg-text)', borderBottom: tab === 'ton' ? '2px solid var(--tg-button)' : '2px solid transparent' }}>
-                        TON
-                    </button>
-                </div>
-
-                {/* Stars tab */}
-                {tab === 'stars' && (
-                    <div className="px-4 pb-6">
-                        <p className="text-xs mb-3" style={{ color: 'var(--tg-hint)' }}>
-                            Send Stars to {video.creator_name}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {STAR_PRESETS.map((amount) => (
-                                <button key={amount}
-                                    onClick={() => handleStarsTip(amount)}
-                                    className="px-4 py-2 rounded-full text-sm font-medium"
-                                    style={{ backgroundColor: 'var(--tg-secondary-bg)', color: 'var(--tg-text)' }}>
-                                    {amount}
+                {!success && (
+                    <>
+                        {/* Tabs */}
+                        <div className="flex justify-center gap-6 px-4 py-3">
+                            {(['stars', 'ton'] as const).map((t) => (
+                                <button key={t} onClick={() => setTab(t)}
+                                    className="text-sm font-semibold bg-transparent border-none cursor-pointer pb-1"
+                                    style={{
+                                        color: tab === t ? '#fff' : 'rgba(255,255,255,0.4)',
+                                        borderBottom: tab === t ? '2px solid #fe2c55' : '2px solid transparent',
+                                    }}>
+                                    {t === 'stars' ? '⭐ Stars' : '💎 TON'}
                                 </button>
                             ))}
                         </div>
-                        <div className="flex gap-2">
-                            <input
-                                type="number"
-                                value={customAmount}
-                                onChange={(e) => setCustomAmount(e.target.value)}
-                                placeholder="Custom"
-                                className="flex-1 px-3 py-2 rounded-lg text-sm bg-transparent outline-none"
-                                style={{ border: '1px solid var(--tg-secondary-bg)', color: 'var(--tg-text)' }}
-                            />
-                            <button
-                                onClick={() => { const n = parseInt(customAmount); if (n > 0) handleStarsTip(n); }}
-                                disabled={!customAmount || parseInt(customAmount) <= 0}
-                                className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-30"
-                                style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
-                                Send
-                            </button>
-                        </div>
-                    </div>
-                )}
 
-                {/* TON tab */}
-                {tab === 'ton' && (
-                    <div className="px-4 pb-6">
-                        {!wallet ? (
-                            <div className="flex flex-col items-center gap-3 py-4">
-                                <p className="text-sm" style={{ color: 'var(--tg-hint)' }}>
-                                    Connect wallet to tip with TON
-                                </p>
-                                <button
-                                    onClick={() => tonConnectUI.openModal()}
-                                    className="px-6 py-3 rounded-full font-semibold text-sm"
-                                    style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
-                                    Connect Wallet
-                                </button>
-                            </div>
-                        ) : !video.creator_wallet ? (
-                            <p className="text-sm text-center py-4" style={{ color: 'var(--tg-hint)' }}>
-                                Creator hasn't connected a wallet yet
-                            </p>
-                        ) : (
-                            <>
-                                <p className="text-xs mb-3" style={{ color: 'var(--tg-hint)' }}>
-                                    Send TON to {video.creator_name}
-                                </p>
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {TON_PRESETS.map((amount) => (
-                                        <button key={amount}
-                                            onClick={() => handleTonTip(amount)}
-                                            className="px-4 py-2 rounded-full text-sm font-medium"
-                                            style={{ backgroundColor: 'var(--tg-secondary-bg)', color: 'var(--tg-text)' }}>
-                                            {amount} TON
+                        {/* Stars tab */}
+                        {tab === 'stars' && (
+                            <div className="px-4 pb-6">
+                                <p className="text-white/40 text-xs mb-4">Send Stars to {video.creator_name}</p>
+                                <div className="grid grid-cols-5 gap-2 mb-4">
+                                    {STAR_PRESETS.map((amount) => (
+                                        <button key={amount} onClick={() => handleStarsTip(amount)}
+                                            className="py-3 rounded-xl text-sm font-semibold border-none cursor-pointer"
+                                            style={{ backgroundColor: '#2c2c2e', color: '#fff' }}>
+                                            {amount}
                                         </button>
                                     ))}
                                 </div>
                                 <div className="flex gap-2">
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={customAmount}
+                                    <input type="number" value={customAmount}
                                         onChange={(e) => setCustomAmount(e.target.value)}
-                                        placeholder="Custom TON"
-                                        className="flex-1 px-3 py-2 rounded-lg text-sm bg-transparent outline-none"
-                                        style={{ border: '1px solid var(--tg-secondary-bg)', color: 'var(--tg-text)' }}
-                                    />
-                                    <button
-                                        onClick={() => { const n = parseFloat(customAmount); if (n > 0) handleTonTip(customAmount); }}
-                                        disabled={!customAmount || parseFloat(customAmount) <= 0}
-                                        className="px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-30"
-                                        style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
+                                        placeholder="Custom"
+                                        className="flex-1 px-4 py-3 rounded-xl text-sm bg-transparent outline-none border-none"
+                                        style={{ backgroundColor: '#2c2c2e', color: '#fff' }} />
+                                    <button onClick={() => { const n = parseInt(customAmount); if (n > 0) handleStarsTip(n); }}
+                                        disabled={!customAmount || parseInt(customAmount) <= 0}
+                                        className="px-6 py-3 rounded-xl text-sm font-semibold border-none cursor-pointer disabled:opacity-30"
+                                        style={{ backgroundColor: '#fe2c55', color: '#fff' }}>
                                         Send
                                     </button>
                                 </div>
-                            </>
+                            </div>
                         )}
-                    </div>
+
+                        {/* TON tab */}
+                        {tab === 'ton' && (
+                            <div className="px-4 pb-6">
+                                {!wallet ? (
+                                    <div className="flex flex-col items-center gap-4 py-6">
+                                        <p className="text-white/40 text-sm">Connect wallet to tip with TON</p>
+                                        <button onClick={() => tonConnectUI.openModal()}
+                                            className="px-8 py-3 rounded-full text-sm font-semibold border-none cursor-pointer"
+                                            style={{ backgroundColor: '#0a84ff', color: '#fff' }}>
+                                            Connect Wallet
+                                        </button>
+                                    </div>
+                                ) : !video.creator_wallet ? (
+                                    <p className="text-white/40 text-sm text-center py-6">Creator hasn't connected a wallet</p>
+                                ) : (
+                                    <>
+                                        <p className="text-white/40 text-xs mb-4">Send TON to {video.creator_name}</p>
+                                        <div className="grid grid-cols-5 gap-2 mb-4">
+                                            {TON_PRESETS.map((amount) => (
+                                                <button key={amount} onClick={() => handleTonTip(amount)}
+                                                    className="py-3 rounded-xl text-xs font-semibold border-none cursor-pointer"
+                                                    style={{ backgroundColor: '#2c2c2e', color: '#fff' }}>
+                                                    {amount}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input type="number" step="0.1" value={customAmount}
+                                                onChange={(e) => setCustomAmount(e.target.value)}
+                                                placeholder="Custom TON"
+                                                className="flex-1 px-4 py-3 rounded-xl text-sm bg-transparent outline-none border-none"
+                                                style={{ backgroundColor: '#2c2c2e', color: '#fff' }} />
+                                            <button onClick={() => { const n = parseFloat(customAmount); if (n > 0) handleTonTip(customAmount); }}
+                                                disabled={!customAmount || parseFloat(customAmount) <= 0}
+                                                className="px-6 py-3 rounded-xl text-sm font-semibold border-none cursor-pointer disabled:opacity-30"
+                                                style={{ backgroundColor: '#0a84ff', color: '#fff' }}>
+                                                Send
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
             </motion.div>
         </AnimatePresence>

@@ -134,12 +134,16 @@ export default function ProfilePage() {
     };
 
     if (loading) {
-        return <div className="h-full flex items-center justify-center" style={{ color: 'var(--tg-hint)' }}>Loading...</div>;
+        return <div className="h-full flex items-center justify-center" style={{ backgroundColor: '#000', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>;
     }
 
     if (!profile) {
-        return <div className="h-full flex items-center justify-center" style={{ color: 'var(--tg-hint)' }}>
-            {currentUser ? 'User not found' : 'Log in to view profile'}
+        return <div className="h-full flex flex-col items-center justify-center gap-3" style={{ backgroundColor: '#000' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+            <p className="text-white/40">{currentUser ? 'User not found' : 'Open in Telegram to view profile'}</p>
         </div>;
     }
 
@@ -147,11 +151,11 @@ export default function ProfilePage() {
     try { tiers = JSON.parse(profile.subscription_tiers || '[]'); } catch { /* ignore */ }
 
     return (
-        <div className="h-full overflow-y-auto">
+        <div className="h-full overflow-y-auto hide-scrollbar" style={{ backgroundColor: '#000' }}>
             {/* Header */}
             <div className="flex flex-col items-center pt-8 px-4">
                 <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-                    style={{ backgroundColor: 'var(--tg-button)' }}>
+                    style={{ backgroundColor: '#fe2c55' }}>
                     {profile.photo_url
                         ? <img src={profile.photo_url} className="w-full h-full rounded-full object-cover" />
                         : (profile.name || '?')[0].toUpperCase()

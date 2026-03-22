@@ -36,8 +36,9 @@ async function main() {
 
     // CORS
     await app.register(cors, {
-        origin: process.env.FRONTEND_URL || '*',
+        origin: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        credentials: true,
     });
 
     // JWT

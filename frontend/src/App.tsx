@@ -41,9 +41,10 @@ export default function App() {
 
     if (isLoading) {
         return (
-            <div className="h-full flex items-center justify-center"
-                style={{ color: 'var(--tg-hint)' }}>
-                Loading...
+            <div className="h-full flex flex-col items-center justify-center gap-3"
+                style={{ backgroundColor: '#000' }}>
+                <div className="w-10 h-10 border-2 border-white/20 border-t-[#fe2c55] rounded-full animate-spin" />
+                <span className="text-white/40 text-sm">Loading...</span>
             </div>
         );
     }

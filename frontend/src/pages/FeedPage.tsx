@@ -137,10 +137,16 @@ export default function FeedPage() {
 
     if (videos.length === 0 && !loading) {
         return (
-            <div className="h-full flex flex-col items-center justify-center gap-4 px-4"
-                style={{ color: 'var(--tg-hint)' }}>
-                <p className="text-lg">No videos yet</p>
-                <p className="text-sm">Be the first to post!</p>
+            <div className="h-full flex flex-col items-center justify-center gap-6 px-8" style={{ backgroundColor: '#000' }}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <p className="text-white/60 text-lg font-medium">No videos yet</p>
+                <button onClick={() => window.location.href = '/create'}
+                    className="px-8 py-3 rounded-full text-sm font-semibold border-none cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, #25f4ee, #fe2c55)', color: '#fff' }}>
+                    Create first video
+                </button>
             </div>
         );
     }
