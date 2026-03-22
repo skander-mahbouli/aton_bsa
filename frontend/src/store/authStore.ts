@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import WebApp from '@twa-dev/sdk';
 import api from '../lib/api';
 import type { User } from '../types';
 
@@ -20,10 +19,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isLoading: true });
 
         try {
-            const initData = WebApp.initData;
+            let initData = '';
+            try {
+                const WebApp = (await import('@twa-dev/sdk')).default;
+                initData = WebApp.initData || '';
+            } catch {
+                // Not in Telegram
+            }
 
             if (!initData) {
-                // Dev mode — no Telegram context
                 set({ isLoading: false });
                 return;
             }
