@@ -29,8 +29,10 @@ export default function TipModal({ video, onClose }: Props) {
                 amount,
             });
 
-            const WebApp = (await import('@twa-dev/sdk')).default;
-            WebApp.openInvoice(res.data.invoiceUrl, (status: string) => {
+            const { getWebApp } = await import('../lib/telegram');
+            const webApp = getWebApp();
+            if (!webApp) return;
+            webApp.openInvoice(res.data.invoiceUrl, (status: string) => {
                 if (status === 'paid') {
                     setSuccess(`+${amount} Stars`);
                     setTimeout(() => { setSuccess(''); onClose(); }, 1500);

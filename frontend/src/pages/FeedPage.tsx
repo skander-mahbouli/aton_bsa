@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
+import { getWebApp } from '../lib/telegram';
 import { useAuthStore } from '../store/authStore';
-// import { useUiStore } from '../store/uiStore';
 import VideoSlide from '../components/VideoSlide';
 import CommentSheet from '../components/CommentSheet';
 import TipModal from '../components/TipModal';
@@ -121,18 +121,14 @@ export default function FeedPage() {
         }
     };
 
-    const handleShare = async (video: Video) => {
-        try {
-            const WebApp = (await import('@twa-dev/sdk')).default;
-            const botUsername = import.meta.env.VITE_BOT_USERNAME;
-            if (botUsername) {
-                const url = `https://t.me/${botUsername}/app?startapp=v_${video.id}`;
-                WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent((video.caption || '').slice(0, 100))}`);
-            }
-            api.post(`/api/videos/${video.id}/share`).catch(() => {});
-        } catch {
-            // ignore
+    const handleShare = (video: Video) => {
+        const webApp = getWebApp();
+        const botUsername = import.meta.env.VITE_BOT_USERNAME;
+        if (webApp && botUsername) {
+            const url = `https://t.me/${botUsername}/app?startapp=v_${video.id}`;
+            webApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent((video.caption || '').slice(0, 100))}`);
         }
+        api.post(`/api/videos/${video.id}/share`).catch(() => {});
     };
 
     if (videos.length === 0 && !loading) {

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/api';
+import { getWebApp } from '../lib/telegram';
 import type { User } from '../types';
 
 interface AuthState {
@@ -28,7 +29,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 set({ user: res.data, isLoading: false });
                 return;
             } catch {
-                // Token expired or invalid, clear it and try fresh login
                 localStorage.removeItem('token');
                 set({ token: null });
             }
@@ -36,16 +36,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         // Try Telegram login
         try {
-            let initData = '';
-            try {
-                const WebApp = (await import('@twa-dev/sdk')).default;
-                initData = WebApp.initData || '';
-            } catch {
-                // Not in Telegram
-            }
+            const webApp = getWebApp();
+            const initData = webApp?.initData || '';
 
             if (!initData) {
-                set({ isLoading: false, error: 'Not in Telegram' });
+                set({ isLoading: false, error: 'Not in Telegram (no initData)' });
                 return;
             }
 

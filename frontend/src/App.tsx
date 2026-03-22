@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { useAuthStore } from './store/authStore';
 import { useUiStore } from './store/uiStore';
+import { getWebApp } from './lib/telegram';
 import FeedPage from './pages/FeedPage';
 import CreatePage from './pages/CreatePage';
 import ProfilePage from './pages/ProfilePage';
@@ -15,64 +16,43 @@ function DeepLinkHandler() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        (async () => {
-            try {
-                const WebApp = (await import('@twa-dev/sdk')).default;
-                const param = WebApp.initDataUnsafe?.start_param;
-                if (param?.startsWith('v_')) navigate(`/?video=${param.slice(2)}`);
-                else if (param?.startsWith('u_')) navigate(`/profile/${param.slice(2)}`);
-            } catch {
-                // Not in Telegram
-            }
-        })();
+        const webApp = getWebApp();
+        const param = webApp?.initDataUnsafe?.start_param;
+        if (param?.startsWith('v_')) navigate(`/?video=${param.slice(2)}`);
+        else if (param?.startsWith('u_')) navigate(`/profile/${param.slice(2)}`);
     }, [navigate]);
 
     return null;
 }
 
-// Temporary debug component — remove after fixing auth
+// Temporary debug — remove after auth is confirmed working
 function DebugOverlay() {
     const { user, token, error } = useAuthStore();
     const [debugInfo, setDebugInfo] = useState('checking...');
     const [show, setShow] = useState(true);
 
     useEffect(() => {
-        (async () => {
-            const info: string[] = [];
-            info.push(`API: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
+        const info: string[] = [];
+        info.push(`API: ${import.meta.env.VITE_API_URL || 'NOT SET'}`);
 
-            try {
-                const WebApp = (await import('@twa-dev/sdk')).default;
-                info.push(`initData: ${WebApp.initData ? WebApp.initData.slice(0, 50) + '...' : 'EMPTY'}`);
-                info.push(`platform: ${WebApp.platform || 'unknown'}`);
-            } catch (e) {
-                info.push(`SDK error: ${e}`);
-            }
+        const webApp = getWebApp();
+        info.push(`WebApp: ${webApp ? 'loaded' : 'NOT FOUND'}`);
+        info.push(`initData: ${webApp?.initData ? webApp.initData.slice(0, 60) + '...' : 'EMPTY'}`);
+        info.push(`platform: ${webApp?.platform || 'unknown'}`);
+        info.push(`token: ${token ? 'yes' : 'none'}`);
+        info.push(`user: ${user ? user.name : 'null'}`);
+        info.push(`error: ${error || 'none'}`);
 
-            info.push(`token: ${token ? 'yes (' + token.slice(0, 20) + '...)' : 'none'}`);
-            info.push(`user: ${user ? user.name + ' (id=' + user.id + ')' : 'null'}`);
-            info.push(`error: ${error || 'none'}`);
-
-            // Test API connectivity
-            try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/health`);
-                const data = await res.json();
-                info.push(`API health: ${JSON.stringify(data)}`);
-            } catch (e) {
-                info.push(`API unreachable: ${e}`);
-            }
-
-            setDebugInfo(info.join('\n'));
-        })();
+        setDebugInfo(info.join('\n'));
     }, [user, token, error]);
 
     if (!show) return null;
 
     return (
-        <div className="fixed top-0 left-0 right-0 z-[999] p-2" style={{ backgroundColor: 'rgba(0,0,0,0.9)' }}>
+        <div className="fixed top-0 left-0 right-0 z-[999] p-2" style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}>
             <pre className="text-[10px] text-green-400 whitespace-pre-wrap font-mono">{debugInfo}</pre>
-            <button onClick={() => setShow(false)} className="text-[10px] text-red-400 mt-1 bg-transparent border-none">
-                [close debug]
+            <button onClick={() => setShow(false)} className="text-[10px] text-red-400 mt-1 bg-transparent border-none cursor-pointer">
+                [close]
             </button>
         </div>
     );
