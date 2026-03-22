@@ -65,8 +65,8 @@ export default function CommentSheet({ videoId, onClose }: Props) {
                 onClick={onClose} />
 
             <motion.div
-                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl flex flex-col safe-bottom"
-                style={{ backgroundColor: '#1c1c1e', height: '60%' }}
+                className="fixed left-0 right-0 z-[60] rounded-t-2xl flex flex-col"
+                style={{ backgroundColor: '#1c1c1e', bottom: '56px', height: '55%' }}
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >

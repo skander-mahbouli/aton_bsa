@@ -80,8 +80,8 @@ export default function TipModal({ video, onClose }: Props) {
             />
 
             <motion.div
-                className="fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl safe-bottom overflow-y-auto"
-                style={{ backgroundColor: '#1c1c1e', maxHeight: '50vh' }}
+                className="fixed left-0 right-0 z-[60] rounded-t-2xl overflow-y-auto"
+                style={{ backgroundColor: '#1c1c1e', bottom: '56px', maxHeight: '60vh' }}
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
