@@ -2,7 +2,7 @@
 
 This file contains mandatory instructions for every Claude session implementing a module from `IMPLEMENTATION_PLAN.md`.
 
-**Current module: 22 complete — next is Module 23 (Frontend: Wallet + Jetton Launch)**
+**Current module: 23 complete — next is Module 24 (Frontend: Bottom Nav + Deep Links)**
 
 ---
 

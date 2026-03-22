@@ -4,6 +4,8 @@ import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { beginCell, toNano, Address } from '@ton/ton';
 import api from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import WalletSection from '../components/WalletSection';
+import LaunchTokenModal from '../components/LaunchTokenModal';
 import type { User, Video } from '../types';
 
 interface ProfileData extends User {
@@ -33,6 +35,7 @@ export default function ProfilePage() {
     const wallet = useTonWallet();
     const [tonConnectUI] = useTonConnectUI();
 
+    const [showLaunchToken, setShowLaunchToken] = useState(false);
     const isOwnProfile = !userId || (currentUser && parseInt(userId) === currentUser.id);
     const profileId = isOwnProfile ? currentUser?.id : parseInt(userId || '0');
 
@@ -201,6 +204,13 @@ export default function ProfilePage() {
                                 Become a Creator
                             </button>
                         )}
+                        {profile.is_creator === 1 && !profile.jetton_address && (
+                            <button onClick={() => setShowLaunchToken(true)}
+                                className="px-6 py-2 rounded-lg text-sm font-medium"
+                                style={{ backgroundColor: 'var(--tg-button)', color: 'var(--tg-button-text)' }}>
+                                Launch Your Token
+                            </button>
+                        )}
                     </>
                 ) : (
                     <>
@@ -317,8 +327,24 @@ export default function ProfilePage() {
                 </p>
             )}
 
+            {/* Wallet section (own profile) */}
+            {isOwnProfile && (
+                <WalletSection />
+            )}
+
             {/* Bottom padding for nav */}
             <div className="h-4" />
+
+            {/* Launch token modal */}
+            {showLaunchToken && (
+                <LaunchTokenModal
+                    onClose={() => setShowLaunchToken(false)}
+                    onSuccess={(addr, name, sym) => {
+                        setProfile((p) => p ? { ...p, jetton_address: addr, jetton_name: name, jetton_symbol: sym } : p);
+                        setShowLaunchToken(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
