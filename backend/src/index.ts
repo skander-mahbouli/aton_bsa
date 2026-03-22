@@ -58,7 +58,14 @@ async function main() {
         }
     });
 
-    // Health check
+    // Health check + admin cleanup (remove after use)
+    app.post('/admin/cleanup-test-data', async (request, reply) => {
+        const secret = (request.body as Record<string, string>)?.secret;
+        if (secret !== process.env.JWT_SECRET) return reply.status(403).send({ error: 'forbidden' });
+        const db = getDb();
+        db.prepare("UPDATE videos SET status = 'deleted' WHERE video_url LIKE '%sample%' OR video_url LIKE '%test%'").run();
+        return { ok: true, message: 'Test videos cleaned' };
+    });
     app.get('/health', async () => ({ status: 'ok' }));
 
     // Routes
