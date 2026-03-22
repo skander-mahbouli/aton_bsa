@@ -26,8 +26,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (existingToken) {
             try {
                 const res = await api.get<User>('/api/users/me');
-                set({ user: res.data, isLoading: false });
-                return;
+                if (res.data && res.data.id) {
+                    set({ user: res.data, isLoading: false });
+                    return;
+                }
+                // User not found in DB — token is stale
+                throw new Error('stale token');
             } catch {
                 localStorage.removeItem('token');
                 set({ token: null });
@@ -35,15 +39,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
 
         // Try Telegram login
+        const webApp = getWebApp();
+        const initData = webApp?.initData || '';
+
+        if (!initData) {
+            set({ isLoading: false, error: 'Not in Telegram (no initData)' });
+            return;
+        }
+
         try {
-            const webApp = getWebApp();
-            const initData = webApp?.initData || '';
-
-            if (!initData) {
-                set({ isLoading: false, error: 'Not in Telegram (no initData)' });
-                return;
-            }
-
             const res = await api.post<{ token: string; user: User }>('/api/auth/telegram', {
                 initData,
             });
