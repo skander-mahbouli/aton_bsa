@@ -15,6 +15,7 @@ import { storageRoutes } from './routes/storage.js';
 import { videoRoutes } from './routes/videos.js';
 import { socialRoutes } from './routes/social.js';
 import { createPaymentRoutes } from './routes/payments.js';
+import { tonRoutes } from './routes/ton.js';
 import { createBot } from './bot/index.js';
 
 const DB_PATH = path.join(process.cwd(), 'tikton.sqlite');
@@ -60,6 +61,7 @@ async function main() {
     await app.register(videoRoutes);
     await app.register(socialRoutes);
     await app.register(createPaymentRoutes(bot));
+    await app.register(tonRoutes);
 
     // Start server
     const port = parseInt(process.env.PORT || '3001', 10);
