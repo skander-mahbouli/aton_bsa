@@ -112,3 +112,10 @@ Do not proceed past these points without user confirmation:
 - Feed score formula: `(like_count*3 + comment_count*5 + share_count*8 - ((unixepoch()-created_at)/3600.0)*0.5)`
 - Subscription duration: 2592000 seconds (30 days)
 - Subscription tiers default JSON: `[{"tier":1,"name":"Bronze","price_ton":"2"},{"tier":2,"name":"Silver","price_ton":"5"},{"tier":3,"name":"Gold","price_ton":"10"}]`
+
+---
+
+## Known Deviations from Plan
+
+- **Platform wallet (Module 7)**: `ton/client.ts` uses `WalletContractV4` but the user's actual wallet is W5 (v5R1). Must be updated before backend sends on-chain transactions (content registration). Contracts were deployed with W5 — the backend wallet derivation needs to match.
+- **ContentRegistry keys (Module 2)**: Plan says `map<String, Address>` but Tact only supports integer keys. Uses `map<Int, Address>` with `sha256(contentHash)` — functionally equivalent.
