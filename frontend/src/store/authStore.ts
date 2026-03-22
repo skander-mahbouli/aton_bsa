@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import api from '../lib/api';
-import { getWebApp } from '../lib/telegram';
-import type { User } from '../types';
+import api from '@/lib/api';
+import type { User } from '@/types';
 
 interface AuthState {
     user: User | null;
@@ -10,6 +9,12 @@ interface AuthState {
     error: string | null;
     login: () => Promise<void>;
     logout: () => void;
+}
+
+function getInitData(): string {
+    // Access the raw initData string from Telegram's injected WebApp
+    const tg = (window as any).Telegram?.WebApp;
+    return tg?.initData || '';
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -21,7 +26,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     login: async () => {
         set({ isLoading: true, error: null });
 
-        // If we already have a token, try to use it
+        // Try existing token first
         const existingToken = get().token;
         if (existingToken) {
             try {
@@ -30,34 +35,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     set({ user: res.data, isLoading: false });
                     return;
                 }
-                // User not found in DB — token is stale
-                throw new Error('stale token');
+                throw new Error('stale');
             } catch {
                 localStorage.removeItem('token');
                 set({ token: null });
             }
         }
 
-        // Try Telegram login
-        const webApp = getWebApp();
-        const initData = webApp?.initData || '';
-
+        // Telegram login
+        const initData = getInitData();
         if (!initData) {
-            set({ isLoading: false, error: 'Not in Telegram (no initData)' });
+            set({ isLoading: false, error: 'Not in Telegram' });
             return;
         }
 
         try {
-            const res = await api.post<{ token: string; user: User }>('/api/auth/telegram', {
-                initData,
-            });
-
+            const res = await api.post<{ token: string; user: User }>('/api/auth/telegram', { initData });
             const { token, user } = res.data;
             localStorage.setItem('token', token);
             set({ token, user, isLoading: false });
         } catch (err) {
-            const message = err instanceof Error ? err.message : 'Auth failed';
-            set({ isLoading: false, error: message });
+            set({ isLoading: false, error: err instanceof Error ? err.message : 'Auth failed' });
         }
     },
 

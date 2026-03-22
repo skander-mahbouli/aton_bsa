@@ -1,197 +1,74 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import api from '../lib/api';
-import { getWebApp } from '../lib/telegram';
-import { useAuthStore } from '../store/authStore';
-import VideoSlide from '../components/VideoSlide';
-import CommentSheet from '../components/CommentSheet';
-import TipModal from '../components/TipModal';
-import type { Video } from '../types';
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useSignal, initData, useLaunchParams } from '@tma.js/sdk-react';
 
-type FeedTab = 'following' | 'foryou' | 'trending';
+import { FeedTabs, type FeedTab } from '@/components/FeedTabs';
+import { VideoFeed } from '@/components/VideoFeed';
+import { RecordButton } from '@/components/RecordButton';
+import { TokGramLogo } from '@/components/TokGramLogo';
+import { useVideos } from '@/hooks/useVideos';
 
-export default function FeedPage() {
-    const [tab, setTab] = useState<FeedTab>('foryou');
-    const [commentVideoId, setCommentVideoId] = useState<number | null>(null);
-    const [tipVideo, setTipVideo] = useState<Video | null>(null);
-    const [searchParams] = useSearchParams();
-    const [videos, setVideos] = useState<Video[]>([]);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const sentinelRef = useRef<HTMLDivElement>(null);
-    const user = useAuthStore((s) => s.user);
+export function FeedPage() {
+  const [activeTab, setActiveTab] = useState<FeedTab>('foryou');
+  const [feedVersion, setFeedVersion] = useState(0);
+  const tgUser = useSignal(initData.user);
+  const lp = useLaunchParams();
+  const avatarUrl =
+    tgUser?.photo_url ??
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${tgUser?.id ?? 'me'}`;
 
-    const fetchVideos = useCallback(async (feedTab: FeedTab, pageNum: number, replace: boolean) => {
-        if (loading) return;
-        setLoading(true);
-        try {
-            const res = await api.get<{ videos: Video[]; page: number; limit: number }>('/api/videos', {
-                params: { feed: feedTab, page: pageNum, limit: 20 },
-            });
-            const newVideos = res.data.videos;
-            setVideos((prev) => replace ? newVideos : [...prev, ...newVideos]);
-            setHasMore(newVideos.length >= 20);
-            setPage(pageNum);
-        } catch {
-            // ignore
-        } finally {
-            setLoading(false);
-        }
-    }, [loading]);
+  const { videos, refetch } = useVideos();
 
-    // Fetch on mount and tab change
-    useEffect(() => {
-        setVideos([]);
-        setActiveIndex(0);
-        setPage(0);
-        setHasMore(true);
-        fetchVideos(tab, 0, true);
-        if (containerRef.current) {
-            containerRef.current.scrollTop = 0;
-        }
-    }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Fetch on mount and tab change
+  useEffect(() => {
+    refetch(activeTab);
+  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Deep link: scroll to specific video
-    useEffect(() => {
-        const videoParam = searchParams.get('video');
-        if (videoParam && videos.length > 0) {
-            const idx = videos.findIndex((v) => v.id === parseInt(videoParam));
-            if (idx >= 0) {
-                setActiveIndex(idx);
-                const container = containerRef.current;
-                if (container) {
-                    const slide = container.querySelector(`[data-slide-index="${idx}"]`);
-                    slide?.scrollIntoView({ behavior: 'instant' });
-                }
-            }
-        }
-    }, [videos, searchParams]);
+  // Deep link: startapp=v_<id>
+  const initialIndex = useMemo(() => {
+    const startParam = lp.tgWebAppStartParam;
+    if (!startParam?.startsWith('v_')) return 0;
+    const videoId = startParam.slice(2);
+    const idx = videos.findIndex((v) => v.id === videoId || v.id === `user_${videoId}`);
+    return idx >= 0 ? idx : 0;
+  }, [lp.tgWebAppStartParam, videos]);
 
-    // Infinite scroll via IntersectionObserver on sentinel
-    useEffect(() => {
-        if (!sentinelRef.current) return;
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting && hasMore && !loading) {
-                    fetchVideos(tab, page + 1, false);
-                }
-            },
-            { threshold: 0.1 },
-        );
-        observer.observe(sentinelRef.current);
-        return () => observer.disconnect();
-    }, [hasMore, loading, tab, page]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Track active slide via IntersectionObserver
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const observers: IntersectionObserver[] = [];
-        const slides = container.querySelectorAll('[data-slide-index]');
-
-        slides.forEach((slide) => {
-            const observer = new IntersectionObserver(
-                ([entry]) => {
-                    if (entry.isIntersecting && entry.intersectionRatio >= 0.8) {
-                        const idx = parseInt(slide.getAttribute('data-slide-index') || '0', 10);
-                        setActiveIndex(idx);
-                    }
-                },
-                { root: container, threshold: 0.8 },
-            );
-            observer.observe(slide);
-            observers.push(observer);
-        });
-
-        return () => observers.forEach((o) => o.disconnect());
-    }, [videos]);
-
-    const handleLike = async (video: Video, index: number) => {
-        try {
-            const res = await api.post<{ liked: boolean; likeCount: number }>(`/api/videos/${video.id}/like`);
-            setVideos((prev) =>
-                prev.map((v, i) => i === index ? { ...v, isLiked: res.data.liked, like_count: res.data.likeCount } : v),
-            );
-        } catch {
-            // ignore
-        }
-    };
-
-    const handleShare = (video: Video) => {
-        const webApp = getWebApp();
-        const botUsername = import.meta.env.VITE_BOT_USERNAME;
-        if (webApp && botUsername) {
-            const url = `https://t.me/${botUsername}/app?startapp=v_${video.id}`;
-            webApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent((video.caption || '').slice(0, 100))}`);
-        }
-        api.post(`/api/videos/${video.id}/share`).catch(() => {});
-    };
-
-    if (videos.length === 0 && !loading) {
-        return (
-            <div className="h-full flex flex-col items-center justify-center gap-6 px-8" style={{ backgroundColor: '#000' }}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-                <p className="text-white/60 text-lg font-medium">No videos yet</p>
-                <button onClick={() => window.location.href = '/create'}
-                    className="px-8 py-3 rounded-full text-sm font-semibold border-none cursor-pointer"
-                    style={{ background: 'linear-gradient(135deg, #25f4ee, #fe2c55)', color: '#fff' }}>
-                    Create first video
-                </button>
-            </div>
-        );
+  function handleTabChange(tab: FeedTab) {
+    if (tab === activeTab) {
+      refetch(activeTab);
+      setFeedVersion((v) => v + 1);
+      return;
     }
+    setActiveTab(tab);
+    setFeedVersion((v) => v + 1);
+  }
 
-    return (
-        <div className="h-full flex flex-col">
-            {/* Tabs */}
-            <div className="fixed top-0 left-0 right-0 z-30 flex justify-center gap-4 pt-3 pb-2"
-                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' }}>
-                {(['following', 'foryou', 'trending'] as FeedTab[]).map((t) => (
-                    <button key={t}
-                        onClick={() => setTab(t)}
-                        className={`text-sm font-semibold bg-transparent border-none cursor-pointer px-2 pb-1 ${tab === t ? 'text-white border-b-2 border-white' : 'text-white/60'}`}
-                        style={tab === t ? { borderBottom: '2px solid white' } : {}}>
-                        {t === 'foryou' ? 'For You' : t === 'following' ? 'Following' : 'Trending'}
-                    </button>
-                ))}
-            </div>
+  const feedKey = `${activeTab}-${feedVersion}`;
 
-            {/* Video feed */}
-            <div ref={containerRef}
-                className="flex-1 overflow-y-scroll overflow-x-hidden"
-                style={{ scrollSnapType: 'y mandatory', WebkitOverflowScrolling: 'touch' }}>
-                {videos.map((video, index) => (
-                    <div key={video.id} data-slide-index={index}>
-                        <VideoSlide
-                            video={video}
-                            isActive={index === activeIndex}
-                            onLike={() => handleLike(video, index)}
-                            onComment={() => setCommentVideoId(video.id)}
-                            onShare={() => handleShare(video)}
-                            onTip={() => setTipVideo(video)}
-                        />
-                    </div>
-                ))}
+  return (
+    <div className="feed-page">
+      <div className="top-bar">
+        <Link to="/me" className="top-bar-logo-group" aria-label="My profile">
+          <TokGramLogo />
+          <img
+            src={avatarUrl}
+            className="my-avatar-circle"
+            alt="My profile"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${tgUser?.id ?? 'me'}`;
+            }}
+          />
+        </Link>
+        <FeedTabs
+          active={activeTab}
+          onChange={handleTabChange}
+          communityCount={0}
+        />
+        <div style={{ width: 40 }} />
+      </div>
 
-                {/* Sentinel for infinite scroll */}
-                <div ref={sentinelRef} className="h-1" />
-            </div>
-
-            {/* Comment sheet */}
-            {commentVideoId !== null && (
-                <CommentSheet videoId={commentVideoId} onClose={() => setCommentVideoId(null)} />
-            )}
-
-            {/* Tip modal */}
-            {tipVideo !== null && (
-                <TipModal video={tipVideo} onClose={() => setTipVideo(null)} />
-            )}
-        </div>
-    );
+      <VideoFeed key={feedKey} videos={videos} initialIndex={activeTab === 'foryou' ? initialIndex : 0} />
+      <RecordButton onPublished={() => refetch(activeTab)} />
+    </div>
+  );
 }
