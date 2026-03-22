@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { restoreDbFromR2, backupDbToR2 } from './db/backup.js';
-import { initDb } from './db/schema.js';
+import { initDb, getDb } from './db/schema.js';
 import { registerJwt } from './auth/middleware.js';
 import { authRoutes } from './routes/auth.js';
 import { storageRoutes } from './routes/storage.js';
